@@ -3,7 +3,12 @@ const API_BASE = window.location.origin;
 
 // Model options for each provider
 const models = {
-  gemini: ["gemini-2.0-flash", "gemini-2.5-flash"],
+  google: [
+    "gemini-2.0-flash",
+    "gemini-2.5-flash",
+    "gemma-3-27b",
+    "gemini-2.5-flash-lite",
+  ],
   openai: ["gpt-4o", "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo"],
   claude: [
     "claude-3-5-sonnet-20241022",

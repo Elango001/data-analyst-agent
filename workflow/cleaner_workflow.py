@@ -13,9 +13,7 @@ class CleanerWorkflow:
         self.workflow=self.workflow.bind_tools()
     
     def clean_node(self, state: State) -> State:
-        state = self.workflow.run(state)
-        print(state)
-        return state
+        return  self.workflow.run(state)
     
     def tool_executor_node(self, state: State) -> State:
         return self.workflow.tool_executor(state)

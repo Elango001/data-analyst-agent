@@ -8,8 +8,9 @@ class VisualizerWorkflow:
     flow: Optional[StateGraph] = None
     graph: Optional[Any] = None
     
-    def __init__(self) -> None:
-        self.workflow = Workflow()
+    def __init__(self,agent) -> None:
+        self.workflow = Workflow(agent)
+        self.workflow=self.workflow.bind_tools()
     
     def visualizer_node(self, state: State) -> State:
         return self.workflow.run(state)
@@ -24,17 +25,18 @@ class VisualizerWorkflow:
     
     def nodes_generator(self) -> None:
         self.flow = StateGraph(State)
-        self.flow.add_node("visualizer", self.visualizer_node)
+        self.flow.add_node("visualizer_node", self.visualizer_node)
         self.flow.add_node("tool_executor", self.tool_executor_node)
-        self.flow.set_entry_point("visualizer")
+        self.flow.set_entry_point("visualizer_node")
         self.flow.add_conditional_edges(
-            "visualizer",
+            "visualizer_node",
             self.route_after_visualizer,
             {
                 "tool_executor": "tool_executor",
                 "END": END,
             },
         )
+        self.flow.add_edge("tool_executor", "visualizer_node")
         self.graph = self.flow.compile()
     
     def invoke(self, initial_state: State, config: Dict[Any, Any] = {'recursion_limit': 500}) -> Any:

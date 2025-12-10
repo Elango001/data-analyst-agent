@@ -10,23 +10,17 @@ class VisualizerAgent:
         self.prompt = prompt
     
     def run(self, state: State) -> State:
-        print("visualizer works")
-
-        # print(state["cur_agent"])
-        # print("-" * 50)
-        # if state["visualizer"]['count'] == 0:
-        #     state = state_update(state)
-        # print(state)
-        # print("-" * 50)
-        # response = self.llm.invoke(self.prompt.get_visualizer_prompt(state))
-        # reason, tool_args = self.llm.split_agent_output(response)
-        # if tool_args and tool_args != []:
-        #     state["tool_call"] = tool_args
-        # else:
-        #     state["tool_call"] = None
-        #     state["cur_agent"] = "END"
-        # state["visualizer"]["count"] = state["visualizer"].get("count", 0) + 1
-        # state["visualizer"]["visualizer_response"].append(reason)
-        # return state
+        if state["visualizer"]['count'] == 0:
+            state = state_update(state)
+        response = self.llm.invoke(self.prompt.get_visualizer_prompt(state))
+        reason, tool_args = self.llm.split_agent_output(response)
+        if tool_args and tool_args != []:
+            state["tool_call"] = tool_args
+        else:
+            state["tool_call"] = None
+            state["cur_agent"] = "END"
+        state["visualizer"]["count"] = state["visualizer"].get("count", 0) + 1
+        state["visualizer"]["visualizer_response"].append(reason)
+        return state
 
     
