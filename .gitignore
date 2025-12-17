@@ -4,3 +4,4 @@ node_modules/
 main.py
 data-analyst-agent-using-gemini.ipynb
 *.db
+venv/
