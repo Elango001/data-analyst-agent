@@ -4,3 +4,10 @@ node_modules/
 data-analyst-agent-using-gemini.ipynb
 *.db
 
+# Virtual environment directories
+venv/
+env/
+ENV/
+.venv/
+*.venv
+
