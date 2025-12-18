@@ -1,5 +1,5 @@
-from workflow.main_workflow import Workflow
-from workflow.state_management import State
+from backend.workflow.main_workflow import Workflow
+from backend.workflow.state_management import State
 from langgraph.graph import StateGraph, END
 from typing import Optional, Any, Dict
 
@@ -39,5 +39,6 @@ class CleanerWorkflow:
         self.flow.add_edge("tool_executor", "cleaner_node")
         self.graph = self.flow.compile()
     
-    def invoke(self, initial_state: State, config: Dict[Any, Any] = {'recursion_limit': 500}) -> Any:
-        return self.graph.invoke(initial_state, config)
+    def invoke(self, initial_state: State) -> Any:
+        for event in self.graph.stream(initial_state):
+            yield event

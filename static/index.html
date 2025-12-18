@@ -65,17 +65,47 @@
       </div>
     </div>
 
-    <div class="container">
-      <div id="status" class="status"></div>
-      <div class="content">
-        <h2>Welcome to Data Analyst Agent</h2>
-        <p>
-          Enter your model name, API key, and upload your dataset to get
-          started.
-        </p>
+    <!-- Main Layout with Sidebar -->
+    <div class="main-layout">
+      <!-- Chat Sidebar -->
+      <div id="chatSidebar" class="chat-sidebar">
+        <div class="chat-header">
+          <h3>💬 Agent Chat</h3>
+          <button id="clearChat" class="clear-chat-btn">Clear</button>
+        </div>
+        <div id="chatMessages" class="chat-messages">
+          <div class="chat-message system">
+            <div class="message-content">
+              👋 Hello! I'm your data cleaning agent. Upload a dataset and click
+              "Start Cleaning" to begin.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content Area -->
+      <div class="main-content">
+        <div class="container">
+          <div id="status" class="status"></div>
+
+          <!-- Welcome Message - Hidden after upload -->
+          <div id="welcomeMessage" class="content">
+            <h2>Welcome to Data Analyst Agent</h2>
+            <p>Configure your model, upload a CSV file, and start cleaning!</p>
+          </div>
+
+          <!-- Data Preview Table -->
+          <div id="dataPreview" class="data-preview">
+            <h3>📊 Data Preview (20 rows)</h3>
+            <table class="data-table" id="dataTable">
+              <thead id="tableHead"></thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 
-    <script src="/static/script.js?v=2"></script>
+    <script src="/static/script.js?v=9"></script>
   </body>
 </html>

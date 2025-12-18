@@ -1,4 +1,4 @@
-from workflow.state_management import State, state_update
+from backend.workflow.state_management import State, state_update
 from typing import Optional, Any
 
 class CleanerAgent:

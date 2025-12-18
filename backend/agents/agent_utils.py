@@ -1,5 +1,5 @@
-from agents.Agent import BaseAgent
-from tools.tool_main import AllTools
+from backend.agents.Agent import BaseAgent
+from backend.tools.tool_main import AllTools
 from typing import get_type_hints, List, Any, Dict, Tuple, Optional, Callable
 import inspect
 from google import genai

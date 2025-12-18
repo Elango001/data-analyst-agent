@@ -1,5 +1,5 @@
-from workflow.state_management import State
-from Configuration.config import Config
+from backend.workflow.state_management import State
+from backend.Configuration.config import Config
 from typing import Any, Optional
 
 class Workflow:

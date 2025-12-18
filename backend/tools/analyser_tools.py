@@ -1,7 +1,7 @@
 from langchain_core.tools import tool
 import numpy as np
 import pandas as pd
-from Configuration.config import Config
+from backend.Configuration.config import Config
 @tool
 def summary_stats(columns: list) -> dict:
     """

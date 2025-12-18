@@ -1,6 +1,6 @@
 from langchain_core.tools import tool
 import pandas as pd
-from Configuration.config import Config
+from backend.Configuration.config import Config
 @tool
 def fillna(columns: list, strategy: str = "mean") -> dict:
     """

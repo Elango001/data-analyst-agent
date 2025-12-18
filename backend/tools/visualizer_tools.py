@@ -2,7 +2,7 @@ from langchain_core.tools import tool
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-from Configuration.config import Config
+from backend.Configuration.config import Config
 @tool
 def plot_histogram(column: str, bins: int = 10) -> dict:
     """

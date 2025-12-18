@@ -1,11 +1,11 @@
-from agents.cleaner_agent import CleanerAgent
-from agents.analyser_agent import AnalyserAgent
-from agents.visualizer_agent import VisualizerAgent
-from agents.Agent import BaseAgent
-from agents.agent_utils import ChatGemini
+from backend.agents.cleaner_agent import CleanerAgent
+from backend.agents.analyser_agent import AnalyserAgent
+from backend.agents.visualizer_agent import VisualizerAgent
+from backend.agents.Agent import BaseAgent
+from backend.agents.agent_utils import ChatGemini
 import numpy as np
 import pandas as pd
-from tools.tool_main import AllTools
+from backend.tools.tool_main import AllTools
 from typing import Optional, List, Any, Dict
 
 class Cleaner_config:
@@ -158,8 +158,8 @@ class DataConfig:
     def set_df(self, dataframe: Optional[pd.DataFrame] = None) -> None:
         if dataframe is not None:
             self.df = dataframe
-        else:
-            self.df = pd.read_csv("/home/elango/Documents/projects/statathon/uploads/df.csv")
+        # else:
+        #     self.df = pd.read_csv("/home/elango/Documents/projects/statathon/uploads/df.csv")
     
     def get_df(self) -> Optional[pd.DataFrame]:
         return self.df

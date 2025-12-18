@@ -1,5 +1,5 @@
 from typing import Optional, Any
-from workflow.state_management import State
+from backend.workflow.state_management import State
 
 DEFAULT_CLEANER_PROMPT = """
 You are a data cleaning agent.

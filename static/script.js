@@ -241,22 +241,186 @@ document.getElementById("cleanBtn").addEventListener("click", async () => {
   try {
     showStatus("Starting data cleaning process...", "loading");
 
-    const cleanResponse = await fetch(`${API_BASE}/clean`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+    // Hide welcome message and show data preview
+    const welcomeMessage = document.getElementById("welcomeMessage");
+    const dataPreview = document.getElementById("dataPreview");
+    const chatMessages = document.getElementById("chatMessages");
+
+    // Create EventSource for SSE
+    const eventSource = new EventSource(`${API_BASE}/clean`);
+
+    let lastState = null;
+
+    // Listen for messages
+    eventSource.addEventListener("message", (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        // Only show cleaner node messages
+        if (data.node === "cleaner_node") {
+          // Add agent message if available
+          if (data.last_message) {
+            addChatMessage("agent", data.last_message);
+          }
+
+          // Show tool calls if available
+          if (data.tool_call && data.tool_call.length > 0) {
+            addToolCallMessage(data.tool_call);
+          }
+
+          // Update data preview (20 rows) in main area
+          if (data.summary && data.summary.data_preview) {
+            displayDataTable(data.summary.data_preview);
+            welcomeMessage.style.display = "none";
+            dataPreview.style.display = "block";
+            lastState = data.summary; // Save for final display
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing event:", error);
+      }
     });
 
-    const cleanResult = await cleanResponse.json();
+    // Handle errors (connection close)
+    eventSource.addEventListener("error", (error) => {
+      eventSource.close();
 
-    if (cleanResponse.ok) {
-      showStatus("✓ Data cleaning completed successfully!", "success");
-      console.log("Cleaning result:", cleanResult);
-    } else {
-      showStatus(cleanResult.detail || "Cleaning failed", "error");
-    }
+      if (lastState) {
+        // Finalize - mark as completed
+        showStatus("✓ Data cleaning completed!", "success");
+        addChatMessage(
+          "system",
+          "✅ Data cleaning process completed successfully!"
+        );
+      } else {
+        showStatus("Error during cleaning process", "error");
+        addChatMessage("system", "❌ Error occurred during cleaning process.");
+        welcomeMessage.style.display = "block";
+        dataPreview.style.display = "none";
+      }
+    });
   } catch (error) {
     showStatus("Error: " + error.message, "error");
+    addChatMessage("system", `❌ Error: ${error.message}`);
   }
+});
+
+// Function to add chat messages
+function addChatMessage(type, content) {
+  const chatMessages = document.getElementById("chatMessages");
+
+  const messageDiv = document.createElement("div");
+  messageDiv.className = `chat-message ${type}`;
+
+  let label = "";
+  if (type === "agent") {
+    label = '<div class="message-label">🤖 Agent</div>';
+  } else if (type === "system") {
+    label = '<div class="message-label">ℹ️ System</div>';
+  }
+
+  messageDiv.innerHTML = `
+    ${label}
+    <div class="message-content">${escapeHtml(content)}</div>
+  `;
+
+  chatMessages.appendChild(messageDiv);
+
+  // Auto-scroll to bottom
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Function to add tool call messages
+function addToolCallMessage(toolCalls) {
+  const chatMessages = document.getElementById("chatMessages");
+
+  const messageDiv = document.createElement("div");
+  messageDiv.className = "chat-message tool";
+
+  let toolsHtml =
+    '<div class="message-label">🔧 Tool Calls</div><div class="message-content">';
+
+  toolCalls.forEach((call, index) => {
+    toolsHtml += `
+      <div class="tool-call-item">
+        <strong>Tool ${index + 1}: ${call.tool}</strong>
+        <code>${JSON.stringify(call.params, null, 2)}</code>
+      </div>
+    `;
+  });
+
+  toolsHtml += "</div>";
+  messageDiv.innerHTML = toolsHtml;
+
+  chatMessages.appendChild(messageDiv);
+
+  // Auto-scroll to bottom
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Helper function to escape HTML
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Function to display data table (20 rows)
+function displayDataTable(dataPreview) {
+  const tableHead = document.getElementById("tableHead");
+  const tableBody = document.getElementById("tableBody");
+
+  // Clear previous data
+  tableHead.innerHTML = "";
+  tableBody.innerHTML = "";
+
+  if (!dataPreview || dataPreview.length === 0) {
+    tableBody.innerHTML = '<tr><td colspan="100%">No data available</td></tr>';
+    return;
+  }
+
+  // Get column names from first row
+  const columns = Object.keys(dataPreview[0]);
+
+  // Build table header
+  const headerRow = document.createElement("tr");
+  columns.forEach((col) => {
+    const th = document.createElement("th");
+    th.textContent = col;
+    headerRow.appendChild(th);
+  });
+  tableHead.appendChild(headerRow);
+
+  // Build table rows (max 20 rows)
+  const rowsToShow = dataPreview.slice(0, 20);
+  rowsToShow.forEach((row) => {
+    const tr = document.createElement("tr");
+    columns.forEach((col) => {
+      const td = document.createElement("td");
+      const value = row[col];
+      // Handle null/undefined
+      td.textContent = value !== null && value !== undefined ? value : "";
+      tr.appendChild(td);
+    });
+    tableBody.appendChild(tr);
+  });
+}
+
+// Clear chat button
+document.getElementById("clearChat").addEventListener("click", () => {
+  const chatMessages = document.getElementById("chatMessages");
+  const welcomeMessage = document.getElementById("welcomeMessage");
+  const dataPreview = document.getElementById("dataPreview");
+
+  chatMessages.innerHTML = `
+    <div class="chat-message system">
+      <div class="message-content">
+        👋 Chat cleared. Upload a dataset and click "Start Cleaning" to begin.
+      </div>
+    </div>
+  `;
+
+  // Reset to welcome state
+  welcomeMessage.style.display = "flex";
+  dataPreview.style.display = "none";
 });

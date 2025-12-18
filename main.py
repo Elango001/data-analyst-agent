@@ -2,19 +2,33 @@ from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
-from typing import Optional
 import pandas as pd
+import numpy as np
 import io
 import os
-from workflow.cleaner_workflow import CleanerWorkflow
-from workflow.state_management import State
-from Configuration.config import Config
-from tools.cleaner_tools import c_tools
-from prompts.prompts import Prompts
-from dotenv import load_dotenv
+import asyncio
+from backend.workflow.cleaner_workflow import CleanerWorkflow
+from backend.Configuration.config import Config
+from backend.tools.cleaner_tools import c_tools
+from backend.prompts.prompts import Prompts
+from sse_starlette.sse import EventSourceResponse
+import json
+from datetime import datetime
 
-# Load environment variables
-load_dotenv()
+# Custom JSON encoder to handle pandas/numpy types
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (pd.Timestamp, datetime)):
+            return obj.isoformat()
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if pd.isna(obj):
+            return None
+        return super().default(obj)
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -67,10 +81,7 @@ async def configure_agent(config_request: ConfigRequest):
         tools = Config.tool_config
         tools.set_cleaner_tools(c_tools)
         print(f"Cleaner tools set: {tools.get_cleaner_tools() is not None}")
-        
-        # Initialize data configuration
-        data = Config.data_config
-        data.set_df()
+    
         
         # Configure cleaner with proper initialization order
         cleaner = Config.cleaner_config
@@ -103,7 +114,7 @@ async def configure_agent(config_request: ConfigRequest):
         print(f"Configuration error: {error_msg}")  # Debug log
         raise HTTPException(status_code=500, detail=f"Configuration failed: {str(e)}")
         
-@app.post("/clean")
+@app.get("/clean")
 async def clean_data():
     """Start data cleaning process"""
     if not is_configured:
@@ -133,14 +144,62 @@ async def clean_data():
             "tool_result": [],
             "df_info": data.profile_data(),
         }
-        
-        result = cleaner_workflow.invoke(initial_state)
-        
-        return {
-            "status": "success",
-            "message": "Data cleaning completed",
-            "result": str(result)  # Convert result to string for JSON serialization
-        }
+        async def event_generator():
+            # Run the synchronous generator in an executor to allow interleaving
+            loop = asyncio.get_event_loop()
+            
+            for event in cleaner_workflow.invoke(initial_state):
+                node = list(event.keys())[0]
+                state = event[node]
+                
+                # Log each event being sent
+                print(f"Streaming event - Node: {node}")
+                
+                # Convert state to dict if it has model_dump method
+                state_dict = state.model_dump() if hasattr(state, "model_dump") else state
+                
+                # Extract only necessary data for chat display
+                chat_data = {
+                    "node": node,
+                }
+                
+                # For cleaner_node, send last message and tool calls
+                if node == "cleaner_node":
+                    cleaner_responses = state_dict.get("cleaner", {}).get("cleaner_response", [])
+                    chat_data["last_message"] = cleaner_responses[-1] if cleaner_responses else None
+                    chat_data["tool_call"] = state_dict.get("tool_call")
+                    
+                    # Get current dataframe from data config
+                    current_df = data.get_df()
+                    data_preview = None
+                    if current_df is not None:
+                        # Convert first 20 rows to list of dicts
+                        preview_df = current_df.head(20)
+                        data_preview = preview_df.to_dict('records')
+                    
+                    # Also include summary data for results panel
+                    chat_data["summary"] = {
+                        "count": state_dict.get("cleaner", {}).get("count", 0),
+                        "success_tools": state_dict.get("success_tools", []),
+                        "failed_tools": state_dict.get("failed_tools", []),
+                        "tool_result": state_dict.get("tool_result", []),
+                        "data_preview": data_preview  # Add first 20 rows
+                    }
+                else:
+                    # For other nodes (like tool_executor), just send basic info
+                    chat_data["info"] = f"Processing {node}"
+
+                # Yield the optimized event
+                yield {
+                    "event": "message",
+                    "data": json.dumps(chat_data, cls=CustomJSONEncoder)
+                }
+                
+                # Yield control to event loop to flush the response
+                await asyncio.sleep(0.01)  # Small delay to ensure flushing
+                print(f"Event sent - Node: {node}")
+
+        return EventSourceResponse(event_generator())
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Cleaning failed: {str(e)}")
