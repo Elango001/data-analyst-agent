@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import pandas as pd
 import numpy as np
@@ -37,6 +38,15 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Add CORS middleware for Vite dev server
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:3000"],  # Vite default ports
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Mount static files
 static_path = os.path.join(os.path.dirname(__file__), "static")
 app.mount("/static", StaticFiles(directory=static_path), name="static")
@@ -46,6 +56,14 @@ class ConfigRequest(BaseModel):
     provider: str = Field(..., description="LLM Provider (e.g., 'google')")
     model_name: str = Field(..., description="Gemini model name")
     api_key: str = Field(..., description="Google API key")
+
+class DBConfigRequest(BaseModel):
+    host: str = Field(default="localhost")
+    database: str = Field(default="preprocessing_logs")
+    user: str = Field(default="postgres")
+    password: str = Field(...)
+    port: int = Field(default=5432)
+    csv_path: str = Field(default="deleted_data.csv")
 
 
 # Global state
@@ -113,6 +131,63 @@ async def configure_agent(config_request: ConfigRequest):
         error_msg = str(e).lower()
         print(f"Configuration error: {error_msg}")  # Debug log
         raise HTTPException(status_code=500, detail=f"Configuration failed: {str(e)}")
+
+@app.post("/configure-db")
+async def configure_database(db_config: DBConfigRequest):
+    """Configure database for deleted data tracking"""
+    try:
+        Config.db_config.set_db_config(
+            host=db_config.host,
+            database=db_config.database,
+            user=db_config.user,
+            password=db_config.password,
+            port=db_config.port,
+            csv_path=db_config.csv_path
+        )
+        
+        return {
+            "status": "success",
+            "message": "Database configured successfully"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"DB configuration failed: {str(e)}")
+
+@app.get("/tool-logs")
+async def get_tool_logs():
+    """Get all tool execution logs"""
+    try:
+        handler = Config.db_config.get_deleted_data_handler()
+        if not handler:
+            raise HTTPException(status_code=400, detail="Database not configured")
+        
+        logs = handler.get_all_tool_logs()
+        return {"status": "success", "logs": logs}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/deleted-data/{tool_id}")
+async def get_deleted_data(tool_id: int):
+    """Get deleted data for a specific tool execution"""
+    try:
+        handler = Config.db_config.get_deleted_data_handler()
+        if not handler:
+            raise HTTPException(status_code=400, detail="Database not configured")
+        
+        deleted_data = handler.get_deleted_data(tool_id)
+        
+        if deleted_data is None:
+            return {"status": "success", "data": None, "message": "No deleted data found"}
+        
+        # Convert DataFrame to records
+        data_records = deleted_data.to_dict('records')
+        
+        return {
+            "status": "success",
+            "data": data_records,
+            "count": len(data_records)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
         
 @app.get("/clean")
 async def clean_data():

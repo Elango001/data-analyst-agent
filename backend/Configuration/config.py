@@ -6,7 +6,9 @@ from backend.agents.agent_utils import ChatGemini
 import numpy as np
 import pandas as pd
 from backend.tools.tool_main import AllTools
+from backend.db.log import DeletedDataHandler, PostgresLogger, DeletedDataCSV
 from typing import Optional, List, Any, Dict
+import os
 
 class Cleaner_config:
     tools: Optional[AllTools] = None
@@ -185,6 +187,19 @@ class DataConfig:
         }
         return profile
 
+class DBConfig:
+    deleted_data_handler: Optional[DeletedDataHandler] = None
+    def __init__(self) -> None:
+        self.deleted_data_handler = None
+    
+    def set_db_config(self, host: str = "localhost", database: str = "preprocessing_logs",
+                      user: str = "postgres", password: str = "postgres", port: int = 5432,
+                      csv_path: str = "deleted_data.csv") -> None:
+        self.deleted_data_handler = DeletedDataHandler(host, database, user, password, port, csv_path)
+    
+    def get_deleted_data_handler(self) -> Optional[DeletedDataHandler]:
+        return self.deleted_data_handler
+
 class Config:
     cleaner_config: Cleaner_config = Cleaner_config()
     analyst_config: Analyser_config = Analyser_config()
@@ -193,3 +208,4 @@ class Config:
     tool_config: ToolConfig = ToolConfig()
     prompt_config: Promptconfig = Promptconfig()
     data_config: DataConfig = DataConfig()
+    db_config: DBConfig = DBConfig()

@@ -5,6 +5,7 @@ from datetime import datetime
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy_utils import database_exists, create_database
 from typing import Optional, List, Dict
 from dotenv import load_dotenv
 
@@ -32,6 +33,10 @@ class PostgresLogger:
     def __init__(self, host: str = "localhost", database: str = "preprocessing_logs", 
                  user: str = "postgres", password: str = "postgres", port: int = 5432):
         database_url = f"postgresql://{user}:{password}@{host}:{port}/{database}"
+        
+        if not database_exists(database_url):
+            create_database(database_url)
+        
         self.engine = create_engine(database_url, echo=False)
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
         Base.metadata.create_all(bind=self.engine)
@@ -114,12 +119,13 @@ class DeletedDataCSV:
                 writer.writerow([tool_id, row_data])
     
     def get_deleted_data(self, tool_id: int) -> Optional[pd.DataFrame]:
+        from io import StringIO
         deleted_rows = []
         with open(self.csv_path, 'r') as f:
             reader = csv.DictReader(f)
             for row in reader:
                 if int(row['tool_id']) == tool_id:
-                    deleted_rows.append(pd.read_json(row['deleted_row'], typ='series'))
+                    deleted_rows.append(pd.read_json(StringIO(row['deleted_row']), typ='series'))
         
         if deleted_rows:
             return pd.DataFrame(deleted_rows)

@@ -14,7 +14,8 @@ def fillna(columns: list, strategy: str = "mean") -> dict:
         if strategy not in ["mean", "median", "mode"]:
             raise ValueError("strategy must be one of: mean, median, mode")
 
-        new_df =Config.data_config.get_df()
+        new_df = Config.data_config.get_df()
+        
         for col in columns:
             if col not in new_df.columns:
                 raise ValueError(f"Column '{col}' not found")
@@ -29,10 +30,50 @@ def fillna(columns: list, strategy: str = "mean") -> dict:
             new_df[col] = new_df[col].fillna(value)
 
         Config.data_config.set_df(new_df)
-        return {"success": True, "action": "fillna", "strategy": strategy}
+        
+        data_manager = Config.db_config.get_deleted_data_handler()
+        if data_manager:
+            tool_id = data_manager.log_tool_execution(
+                str({"tool": "fillna", "columns": columns, "strategy": strategy}), None
+            )
+            return {"success": True, "action": "fillna", "columns": columns, "strategy": strategy, "tool_id": tool_id}
+        
+        return {"success": True, "action": "fillna", "columns": columns, "strategy": strategy}
 
     except Exception as e:
         return {"success": False, "error_type": type(e).__name__, "error_message": str(e), "action": "fillna"}
+@tool
+def dropna(columns: list = None) -> dict:
+    """
+    description: Drops rows with missing values. If columns specified, drops rows with NaN in those columns only.
+    args:
+        - columns: List of column names to check for NaN (optional, if None checks all columns)
+    """
+    try:
+        new_df = Config.data_config.get_df()
+        
+        if columns:
+            for col in columns:
+                if col not in new_df.columns:
+                    raise ValueError(f"Column '{col}' not found")
+            deleted_rows = new_df[new_df[columns].isnull().any(axis=1)].copy()
+            new_df = new_df.dropna(subset=columns)
+        else:
+            deleted_rows = new_df[new_df.isnull().any(axis=1)].copy()
+            new_df = new_df.dropna()
+        
+        Config.data_config.set_df(new_df)
+        data_manager = Config.db_config.get_deleted_data_handler()
+        if data_manager and len(deleted_rows) > 0:
+            tool_id = data_manager.log_tool_execution(
+                str({"tool":"dropna","columns":columns}), deleted_rows
+            )
+            return {"success": True, "action": "dropna", "columns": columns, "rows_deleted": len(deleted_rows), "tool_id": tool_id}
+        
+        return {"success": True, "action": "dropna", "columns": columns, "rows_deleted": len(deleted_rows)}
+
+    except Exception as e:
+        return {"success": False, "error_type": type(e).__name__, "error_message": str(e), "action": "dropna"}
 @tool
 def scale(columns: list, strategy: str = "standard") -> dict:
     """
@@ -61,6 +102,13 @@ def scale(columns: list, strategy: str = "standard") -> dict:
         new_df[columns] = scaler.fit_transform(new_df[columns])
         Config.data_config.set_df(new_df)
 
+        data_manager = Config.db_config.get_deleted_data_handler()
+        if data_manager:
+            tool_id = data_manager.log_tool_execution(
+                str({"tool": "scale", "columns": columns, "strategy": strategy}), None
+            )
+            return {"success": True, "action": "scale", "strategy": strategy, "tool_id": tool_id}
+        
         return {"success": True, "action": "scale", "strategy": strategy}
 
     except Exception as e:
@@ -92,6 +140,14 @@ def encode(column: str, strategy: str = "onehot") -> dict:
             new_df[column] = encoder.fit_transform(new_df[column].astype(str))
 
         Config.data_config.set_df(new_df)
+        
+        data_manager = Config.db_config.get_deleted_data_handler()
+        if data_manager:
+            tool_id = data_manager.log_tool_execution(
+                str({"tool": "encode", "column": column, "strategy": strategy}), None
+            )
+            return {"success": True, "action": "encode", "strategy": strategy, "tool_id": tool_id}
+        
         return {"success": True, "action": "encode", "strategy": strategy}
 
     except Exception as e:
@@ -117,10 +173,19 @@ def remove_outliers(column: str, strategy: str = "iqr") -> dict:
             Q1 = new_df[column].quantile(0.25)
             Q3 = new_df[column].quantile(0.75)
             IQR = Q3 - Q1
+            deleted_rows = new_df[(new_df[column] < Q1 - 1.5 * IQR) | (new_df[column] > Q3 + 1.5 * IQR)].copy()
             new_df = new_df[(new_df[column] >= Q1 - 1.5 * IQR) & (new_df[column] <= Q3 + 1.5 * IQR)]
 
         Config.data_config.set_df(new_df)
-        return {"success": True, "action": "remove_outliers", "strategy": strategy}
+        
+        data_manager = Config.db_config.get_deleted_data_handler()
+        if data_manager and len(deleted_rows) > 0:
+            tool_id = data_manager.log_tool_execution(
+                str({"tool": "remove_outliers", "column": column, "strategy": strategy}), deleted_rows
+            )
+            return {"success": True, "action": "remove_outliers", "strategy": strategy, "rows_deleted": len(deleted_rows), "tool_id": tool_id}
+        
+        return {"success": True, "action": "remove_outliers", "strategy": strategy, "rows_deleted": len(deleted_rows)}
 
     except Exception as e:
         return {"success": False, "error_type": type(e).__name__, "error_message": str(e), "action": "remove_outliers"}
@@ -138,9 +203,20 @@ def drop_columns(columns: list) -> dict:
             if col not in new_df.columns:
                 raise ValueError(f"Column '{col}' not found")
 
+        deleted_data = new_df[columns].copy()
+        deleted_data['_original_index'] = new_df.index
         new_df = new_df.drop(columns=columns)
+        
         Config.data_config.set_df(new_df)
-        return {"success": True, "action": "drop_columns"}
+        
+        data_manager = Config.db_config.get_deleted_data_handler()
+        if data_manager:
+            tool_id = data_manager.log_tool_execution(
+                str({"tool": "drop_columns", "columns": columns}), deleted_data
+            )
+            return {"success": True, "action": "drop_columns", "columns": columns, "tool_id": tool_id}
+        
+        return {"success": True, "action": "drop_columns", "columns": columns}
 
     except Exception as e:
         return {"success": False, "error_type": type(e).__name__, "error_message": str(e), "action": "drop_columns"}
@@ -167,6 +243,14 @@ def impute_by_group(column: str, group_by: str, strategy: str = "mean") -> dict:
             new_df[column] = new_df[column].fillna(new_df.groupby(group_by)[column].transform(lambda x: x.mode()[0]))
 
         Config.data_config.set_df(new_df)
+        
+        data_manager = Config.db_config.get_deleted_data_handler()
+        if data_manager:
+            tool_id = data_manager.log_tool_execution(
+                str({"tool": "impute_by_group", "column": column, "group_by": group_by, "strategy": strategy}), None
+            )
+            return {"success": True, "action": "impute_by_group", "tool_id": tool_id}
+        
         return {"success": True, "action": "impute_by_group"}
 
     except Exception as e:
@@ -187,6 +271,14 @@ def to_numeric(columns: list) -> dict:
             new_df[col] = pd.to_numeric(new_df[col], errors="coerce")
         
         Config.data_config.set_df(new_df)
+        
+        data_manager = Config.db_config.get_deleted_data_handler()
+        if data_manager:
+            tool_id = data_manager.log_tool_execution(
+                str({"tool": "to_numeric", "columns": columns}), None
+            )
+            return {"success": True, "action": "to_numeric", "tool_id": tool_id}
+        
         return {"success": True, "action": "to_numeric"}
     except Exception as e:
         return {"success": False, "error_type": type(e).__name__, "error_message": str(e), "action": "to_numeric"}
@@ -207,6 +299,14 @@ def to_datetime(columns: list, format: str = None) -> dict:
             new_df[col] = pd.to_datetime(new_df[col], format=format, errors="coerce")
         
         Config.data_config.set_df(new_df)
+        
+        data_manager = Config.db_config.get_deleted_data_handler()
+        if data_manager:
+            tool_id = data_manager.log_tool_execution(
+                str({"tool": "to_datetime", "columns": columns, "format": format}), None
+            )
+            return {"success": True, "action": "to_datetime", "tool_id": tool_id}
+        
         return {"success": True, "action": "to_datetime"}
     except Exception as e:
         return {"success": False, "error_type": type(e).__name__, "error_message": str(e), "action": "to_datetime"}
@@ -234,6 +334,14 @@ def clean_text(columns: list, lowercase: bool = True, remove_special: bool = Tru
             new_df[col] = s
         
         Config.data_config.set_df(new_df)
+        
+        data_manager = Config.db_config.get_deleted_data_handler()
+        if data_manager:
+            tool_id = data_manager.log_tool_execution(
+                str({"tool": "clean_text", "columns": columns, "lowercase": lowercase, "remove_special": remove_special, "strip": strip}), None
+            )
+            return {"success": True, "action": "clean_text", "tool_id": tool_id}
+        
         return {"success": True, "action": "clean_text"}
     except Exception as e:
         return {"success": False, "error_type": type(e).__name__, "error_message": str(e), "action": "clean_text"}
@@ -247,17 +355,29 @@ def handle_duplicates(strategy: str = "drop") -> dict:
     try:
         new_df = Config.data_config.get_df()
         
-        if strategy == "drop":
-            new_df = new_df.drop_duplicates()
-        elif strategy == "first":
-            new_df = new_df[~new_df.duplicated(keep="first")]
-        elif strategy == "last":
-            new_df = new_df[~new_df.duplicated(keep="last")]
-        else:
+        if strategy not in ["drop", "first", "last"]:
             raise ValueError("strategy must be: drop | first | last")
         
+        if strategy == "drop":
+            deleted_rows = new_df[new_df.duplicated()].copy()
+            new_df = new_df.drop_duplicates()
+        elif strategy == "first":
+            deleted_rows = new_df[new_df.duplicated(keep="first")].copy()
+            new_df = new_df[~new_df.duplicated(keep="first")]
+        elif strategy == "last":
+            deleted_rows = new_df[new_df.duplicated(keep="last")].copy()
+            new_df = new_df[~new_df.duplicated(keep="last")]
+        
         Config.data_config.set_df(new_df)
-        return {"success": True, "action": "handle_duplicates", "strategy": strategy}
+        
+        data_manager = Config.db_config.get_deleted_data_handler()
+        if data_manager and len(deleted_rows) > 0:
+            tool_id = data_manager.log_tool_execution(
+                str({"tool": "handle_duplicates", "strategy": strategy}), deleted_rows
+            )
+            return {"success": True, "action": "handle_duplicates", "strategy": strategy, "rows_deleted": len(deleted_rows), "tool_id": tool_id}
+        
+        return {"success": True, "action": "handle_duplicates", "strategy": strategy, "rows_deleted": len(deleted_rows)}
     except Exception as e:
         return {"success": False, "error_type": type(e).__name__, "error_message": str(e), "action": "handle_duplicates"}
 @tool
@@ -278,6 +398,14 @@ def combine_columns(columns: list, new_column: str, separator: str = "_") -> dic
         
         new_df[new_column] = new_df[columns].astype(str).agg(separator.join, axis=1)
         Config.data_config.set_df(new_df)
+        
+        data_manager = Config.db_config.get_deleted_data_handler()
+        if data_manager:
+            tool_id = data_manager.log_tool_execution(
+                str({"tool": "combine_columns", "columns": columns, "new_column": new_column, "separator": separator}), None
+            )
+            return {"success": True, "action": "combine_columns", "tool_id": tool_id}
+        
         return {"success": True, "action": "combine_columns"}
     except Exception as e:
         return {"success": False, "error_type": type(e).__name__, "error_message": str(e), "action": "combine_columns"}
@@ -292,6 +420,14 @@ def rename_columns(mapping: dict) -> dict:
         new_df = Config.data_config.get_df()
         new_df = new_df.rename(columns=mapping)
         Config.data_config.set_df(new_df)
+        
+        data_manager = Config.db_config.get_deleted_data_handler()
+        if data_manager:
+            tool_id = data_manager.log_tool_execution(
+                str({"tool": "rename_columns", "mapping": mapping}), None
+            )
+            return {"success": True, "action": "rename_columns", "tool_id": tool_id}
+        
         return {"success": True, "action": "rename_columns"}
     except Exception as e:
         return {"success": False, "error_type": type(e).__name__, "error_message": str(e), "action": "rename_columns"}
