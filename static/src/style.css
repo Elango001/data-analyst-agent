@@ -1,0 +1,159 @@
+body {
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 18px; /* GLOBAL INCREASE */
+}
+
+/* NAVBAR */
+.navbar {
+  height: 72px;
+  background: #020617;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+}
+
+.nav-left {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.nav-right button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 18px;
+  margin-left: 20px;
+  cursor: pointer;
+}
+
+/* LAYOUT */
+.app {
+  display: flex;
+  height: calc(100vh - 72px);
+}
+
+#content {
+  flex: 1;
+  padding: 36px;
+  overflow-y: auto;
+}
+
+/* CHAT PANEL */
+.chat-panel {
+  width: 380px;
+  border-left: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  background: white;
+}
+
+.chat-header {
+  padding: 18px;
+  font-size: 20px;
+  font-weight: 600;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+}
+
+.clear-chat {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #ef4444;
+  cursor: pointer;
+}
+
+/* CHAT */
+.chat-body {
+  flex: 1;
+  padding: 18px;
+  overflow-y: auto;
+}
+
+.chat {
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  font-size: 17px;
+}
+
+/* .chat.user {
+  background: #2563eb;
+  color: white;
+  align-self: flex-end;
+} */
+
+.chat.agent {
+  background: #f1f5f9;
+}
+/* 
+.chat-input {
+  display: flex;
+  padding: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 14px;
+  font-size: 17px;
+}
+
+.chat-input button {
+  margin-left: 12px;
+  padding: 14px 18px;
+  font-size: 17px;
+} */
+
+/* Remove / hide the user input chat box entirely */
+.chat-input,
+.chat-input * {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+/* CARDS */
+.card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 26px;
+}
+
+h2 { font-size: 32px; }
+h3 { font-size: 24px; }
+
+label {
+  margin-top: 18px;
+  display: block;
+  font-weight: 500;
+}
+
+select, input {
+  width: 100%;
+  padding: 14px;
+  margin-top: 8px;
+  font-size: 17px;
+}
+
+/* BUTTON */
+.btn.primary {
+  background: #2563eb;
+  color: white;
+  padding: 16px 26px;
+  border-radius: 12px;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+}

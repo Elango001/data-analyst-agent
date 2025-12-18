@@ -1,111 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Data Analyst Agent</title>
-    <link rel="stylesheet" href="/static/style.css" />
-  </head>
-  <body>
-    <nav class="navbar">
-      <div class="nav-container">
-        <div class="nav-left">
-          <h1>Data Analyst Agent</h1>
-          <button id="configBtn" class="config-btn">⚙️ Configure Model</button>
-        </div>
-        <div class="nav-right">
-          <input type="file" id="csvFile" accept=".csv" class="file-input" />
-          <button id="submitBtn" class="nav-btn">Upload & Process</button>
-          <button id="cleanBtn" class="nav-btn clean-btn">
-            🧹 Start Cleaning
-          </button>
-        </div>
-      </div>
-    </nav>
+<head>
+  <meta charset="UTF-8" />
+  <title>Data Analyst Agent</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
 
-    <!-- Configure Model Modal -->
-    <div id="configModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Configure Model</h2>
-          <button id="closeModal" class="close-btn">&times;</button>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label for="providerSelect">Provider:</label>
-            <select id="providerSelect" class="modal-select">
-              <option value="">-- Select Provider --</option>
-              <option value="google">Google Gemini</option>
-              <option value="openai">OpenAI</option>
-              <option value="claude">Anthropic Claude</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="modelSelect">Model:</label>
-            <select id="modelSelect" class="modal-select">
-              <option value="">-- Select Model --</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="modalApiKey">API Key:</label>
-            <input
-              type="password"
-              id="modalApiKey"
-              placeholder="Enter your API key"
-              class="modal-input"
-            />
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button id="saveConfigBtn" class="save-btn">
-            Save Configuration
-          </button>
-          <button id="cancelBtn" class="cancel-btn">Cancel</button>
-        </div>
-      </div>
-    </div>
+<header class="navbar"></header>
 
-    <!-- Main Layout with Sidebar -->
-    <div class="main-layout">
-      <!-- Chat Sidebar -->
-      <div id="chatSidebar" class="chat-sidebar">
-        <div class="chat-header">
-          <h3>💬 Agent Chat</h3>
-          <button id="clearChat" class="clear-chat-btn">Clear</button>
-        </div>
-        <div id="chatMessages" class="chat-messages">
-          <div class="chat-message system">
-            <div class="message-content">
-              👋 Hello! I'm your data cleaning agent. Upload a dataset and click
-              "Start Cleaning" to begin.
-            </div>
-          </div>
-        </div>
-      </div>
+<div class="app">
+  <main id="content"></main>
+  <aside class="chat-panel"></aside>
+</div>
 
-      <!-- Main Content Area -->
-      <div class="main-content">
-        <div class="container">
-          <div id="status" class="status"></div>
-
-          <!-- Welcome Message - Hidden after upload -->
-          <div id="welcomeMessage" class="content">
-            <h2>Welcome to Data Analyst Agent</h2>
-            <p>Configure your model, upload a CSV file, and start cleaning!</p>
-          </div>
-
-          <!-- Data Preview Table -->
-          <div id="dataPreview" class="data-preview">
-            <h3>📊 Data Preview (20 rows)</h3>
-            <table class="data-table" id="dataTable">
-              <thead id="tableHead"></thead>
-              <tbody id="tableBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <script src="/static/script.js?v=9"></script>
-  </body>
+<script type="module" src="/src/main.js"></script>
+</body>
 </html>
