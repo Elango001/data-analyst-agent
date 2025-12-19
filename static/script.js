@@ -293,6 +293,22 @@ document.getElementById("submitBtn").addEventListener("click", async () => {
         `✓ Success! Uploaded ${uploadResult.rows} rows, ${uploadResult.columns} columns`,
         "success"
       );
+
+      // Show data preview
+      if (uploadResult.preview) {
+        const welcomeMessage = document.getElementById("welcomeMessage");
+        const dataPreview = document.getElementById("dataPreview");
+
+        displayDataTable(uploadResult.preview);
+        welcomeMessage.style.display = "none";
+        dataPreview.style.display = "block";
+
+        // Add a chat message about the upload
+        addChatMessage(
+          "system",
+          `📊 Dataset uploaded: ${uploadResult.rows} rows × ${uploadResult.columns} columns. Preview showing first ${uploadResult.preview.length} rows.`
+        );
+      }
     } else {
       showStatus(uploadResult.detail || "Upload failed", "error");
     }

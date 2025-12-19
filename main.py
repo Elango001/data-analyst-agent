@@ -158,12 +158,27 @@ async def get_tool_logs():
     try:
         handler = Config.db_config.get_deleted_data_handler()
         if not handler:
-            raise HTTPException(status_code=400, detail="Database not configured")
+            # Return empty logs instead of error if DB not configured
+            return {
+                "status": "warning",
+                "logs": [],
+                "message": "Database not configured. Configure database first to see logs."
+            }
         
         logs = handler.get_all_tool_logs()
-        return {"status": "success", "logs": logs}
+        return {
+            "status": "success",
+            "logs": logs,
+            "message": f"Found {len(logs)} logs"
+        }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error fetching logs: {str(e)}")
+        # Return empty logs with error message instead of 500 error
+        return {
+            "status": "error",
+            "logs": [],
+            "message": f"Error loading logs: {str(e)}"
+        }
 
 @app.get("/deleted-data/{tool_id}")
 async def get_deleted_data(tool_id: int):
@@ -171,12 +186,20 @@ async def get_deleted_data(tool_id: int):
     try:
         handler = Config.db_config.get_deleted_data_handler()
         if not handler:
-            raise HTTPException(status_code=400, detail="Database not configured")
+            return {
+                "status": "error",
+                "data": None,
+                "message": "Database not configured"
+            }
         
         deleted_data = handler.get_deleted_data(tool_id)
         
         if deleted_data is None:
-            return {"status": "success", "data": None, "message": "No deleted data found"}
+            return {
+                "status": "success",
+                "data": None,
+                "message": "No deleted data found"
+            }
         
         # Convert DataFrame to records
         data_records = deleted_data.to_dict('records')
@@ -187,7 +210,12 @@ async def get_deleted_data(tool_id: int):
             "count": len(data_records)
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error fetching deleted data: {str(e)}")
+        return {
+            "status": "error",
+            "data": None,
+            "message": str(e)
+        }
         
 @app.get("/clean")
 async def clean_data():
@@ -297,11 +325,16 @@ async def upload_data(file: UploadFile = File(...)):
         data = Config.data_config
         data.set_df(df)
         
+        # Get preview of first 20 rows
+        preview_df = df.head(20)
+        data_preview = preview_df.to_dict('records')
+        
         return {
             "status": "success",
             "message": f"Uploaded {file.filename}",
             "rows": len(df),
-            "columns": len(df.columns)
+            "columns": len(df.columns),
+            "preview": data_preview
         }
     
     except Exception as e:

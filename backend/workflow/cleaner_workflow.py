@@ -19,7 +19,7 @@ class CleanerWorkflow:
         return self.workflow.tool_executor(state)
 
     def route_after_cleaner(self, state: State) -> str:
-        if state["tool_call"]:
+        if state["tool_call"] and state['cleaner']['count']<=3:
             return "tool_executor"
         return "END"
     
