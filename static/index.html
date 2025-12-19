@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Data Analyst Agent</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="nav-container">
+        <div class="nav-left">
+          <h1>Data Analyst Agent</h1>
+          <button id="configBtn" class="config-btn">⚙️ Configure Model</button>
+        </div>
+        <div class="nav-right">
+          <input type="file" id="csvFile" accept=".csv" class="file-input" />
+          <button id="submitBtn" class="nav-btn">Upload & Process</button>
+          <button id="cleanBtn" class="nav-btn clean-btn">
+            🧹 Start Cleaning
+          </button>
+          <button id="dbConfigBtn" class="nav-btn">DB Config</button>
+          <button id="viewLogsBtn" class="nav-btn">Tool Logs</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Configure Model Modal -->
+    <div id="configModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Configure Model</h2>
+          <button id="closeModal" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="providerSelect">Provider:</label>
+            <select id="providerSelect" class="modal-select">
+              <option value="">-- Select Provider --</option>
+              <option value="google">Google Gemini</option>
+              <option value="openai">OpenAI</option>
+              <option value="claude">Anthropic Claude</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="modelSelect">Model:</label>
+            <select id="modelSelect" class="modal-select">
+              <option value="">-- Select Model --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="modalApiKey">API Key:</label>
+            <input
+              type="password"
+              id="modalApiKey"
+              placeholder="Enter your API key"
+              class="modal-input"
+            />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="saveConfigBtn" class="save-btn">
+            Save Configuration
+          </button>
+          <button id="cancelBtn" class="cancel-btn">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Configure DB Modal -->
+    <div id="dbConfigModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Configure Database</h2>
+          <button id="closeDbModal" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="dbHost">Host:</label>
+            <input
+              type="text"
+              id="dbHost"
+              class="modal-input"
+              value="localhost"
+            />
+          </div>
+          <div class="form-group">
+            <label for="dbName">Database:</label>
+            <input
+              type="text"
+              id="dbName"
+              class="modal-input"
+              value="preprocessing_logs"
+            />
+          </div>
+          <div class="form-group">
+            <label for="dbUser">User:</label>
+            <input
+              type="text"
+              id="dbUser"
+              class="modal-input"
+              value="postgres"
+            />
+          </div>
+          <div class="form-group">
+            <label for="dbPassword">Password:</label>
+            <input type="password" id="dbPassword" class="modal-input" />
+          </div>
+          <div class="form-group">
+            <label for="dbPort">Port:</label>
+            <input type="number" id="dbPort" class="modal-input" value="5432" />
+          </div>
+          <div class="form-group">
+            <label for="csvPath">CSV Path:</label>
+            <input
+              type="text"
+              id="csvPath"
+              class="modal-input"
+              value="deleted_data.csv"
+            />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="saveDbConfigBtn" class="save-btn">Save DB Config</button>
+          <button id="cancelDbBtn" class="cancel-btn">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Layout with Sidebar -->
+    <div class="main-layout">
+      <!-- Chat Sidebar -->
+      <div id="chatSidebar" class="chat-sidebar">
+        <div class="chat-header">
+          <h3>💬 Agent Chat</h3>
+          <button id="clearChat" class="clear-chat-btn">Clear</button>
+        </div>
+        <div id="chatMessages" class="chat-messages">
+          <div class="chat-message system">
+            <div class="message-content">
+              👋 Hello! I'm your data cleaning agent. Upload a dataset and click
+              "Start Cleaning" to begin.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content Area -->
+      <div class="main-content">
+        <div class="container">
+          <div id="status" class="status"></div>
+
+          <!-- Welcome Message - Hidden after upload -->
+          <div id="welcomeMessage" class="content">
+            <h2>Welcome to Data Analyst Agent</h2>
+            <p>Configure your model, upload a CSV file, and start cleaning!</p>
+          </div>
+
+          <!-- Data Preview Table -->
+          <div id="dataPreview" class="data-preview">
+            <h3>📊 Data Preview (20 rows)</h3>
+            <table class="data-table" id="dataTable">
+              <thead id="tableHead"></thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+
+          <!-- Tool Logs Panel -->
+          <div
+            id="toolLogsPanel"
+            class="data-preview"
+            style="display: none; margin-top: 16px"
+          >
+            <h3>🧾 Tool Execution History</h3>
+            <table class="data-table" id="toolLogsTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Timestamp</th>
+                  <th>Tool</th>
+                  <th>Deleted Data</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="toolLogsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/static/script.js?v=10"></script>
+  </body>
+</html>

@@ -12,7 +12,7 @@ Config.db_config.set_db_config(
     user="postgres",
     password="__Elango2006",
     port=5432,
-    csv_path="/home/elango/Documents/projects/statathon/backend/uploads/deleted_data.csv"
+    csv_path="/home/elango/Documents/projects/statathon/backend/updates/deleted_data.csv"
 )
 
 
