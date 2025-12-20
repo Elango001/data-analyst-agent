@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-const API_BASE = "";
+const API_BASE = "http://localhost:8000";
 
 // Model configurations for different providers
 const MODEL_OPTIONS = {
@@ -36,20 +36,78 @@ const DB_OPTIONS = [
 ];
 
 const ConfigPage = () => {
-  const [provider, setProvider] = useState("google");
-  const [modelName, setModelName] = useState("gemini-2.0-flash-exp");
-  const [apiKey, setApiKey] = useState("");
+  // Load from localStorage
+  const [provider, setProvider] = useState(() => {
+    return localStorage.getItem("llm_provider") || "google";
+  });
+  const [modelName, setModelName] = useState(() => {
+    return localStorage.getItem("llm_model") || "gemini-2.0-flash-exp";
+  });
+  const [apiKey, setApiKey] = useState(() => {
+    return localStorage.getItem("llm_api_key") || "";
+  });
   const [dbType, setDbType] = useState("postgresql");
   const [csvFile, setCsvFile] = useState(null);
-  const [db, setDb] = useState({
-    host: "localhost",
-    database: "preprocessing_logs",
-    user: "postgres",
-    password: "",
-    port: 5432,
-    csv_path: "deleted_data.csv",
+  const [db, setDb] = useState(() => {
+    const savedDb = localStorage.getItem("db_config");
+    if (savedDb) {
+      try {
+        return JSON.parse(savedDb);
+      } catch (e) {
+        console.error("Failed to parse saved db config:", e);
+      }
+    }
+    return {
+      host: "localhost",
+      database: "preprocessing_logs",
+      user: "postgres",
+      password: "",
+      port: 5432,
+      csv_path: "deleted_data.csv",
+    };
   });
   const [status, setStatus] = useState("");
+
+  // Save to localStorage whenever config changes
+  useEffect(() => {
+    localStorage.setItem("llm_provider", provider);
+  }, [provider]);
+
+  useEffect(() => {
+    localStorage.setItem("llm_model", modelName);
+  }, [modelName]);
+
+  useEffect(() => {
+    if (apiKey) {
+      localStorage.setItem("llm_api_key", apiKey);
+    }
+  }, [apiKey]);
+
+  useEffect(() => {
+    localStorage.setItem("db_config", JSON.stringify(db));
+  }, [db]);
+
+  // Clear all storage when the window/tab is closed or refreshed
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      // Clear all localStorage data
+      localStorage.removeItem("llm_provider");
+      localStorage.removeItem("llm_model");
+      localStorage.removeItem("llm_api_key");
+      localStorage.removeItem("db_config");
+
+      // Clear all sessionStorage data
+      sessionStorage.clear();
+    };
+
+    // Add event listener for beforeunload (triggered when closing/refreshing)
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // Cleanup: Remove event listener when component unmounts
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
 
   const handleProviderChange = (newProvider) => {
     if (newProvider !== "google") {

@@ -19,7 +19,7 @@ class VisualizerWorkflow:
         return self.workflow.tool_executor(state)
     
     def route_after_visualizer(self, state: State) -> str:
-        if state["tool_call"]:
+        if state["tool_call"] and state['visualizer']['count']<=3:
             return "tool_executor"
         return "END"
     
@@ -39,5 +39,6 @@ class VisualizerWorkflow:
         self.flow.add_edge("tool_executor", "visualizer_node")
         self.graph = self.flow.compile()
     
-    def invoke(self, initial_state: State, config: Dict[Any, Any] = {'recursion_limit': 500}) -> Any:
-        return self.graph.invoke(initial_state, config)
+    def invoke(self, initial_state: State) -> Any:
+        for event in self.graph.stream(initial_state):
+            yield event

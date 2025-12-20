@@ -45,11 +45,9 @@ RULES:
 
 DEFAULT_VISUALIZER_PROMPT = """
 You are a data visualizing agent.
-Goal: Suggest the next best data-visualization step based on the data state and analysis report.
+Goal: Suggest the next best data-visualization step based on the data state.
 Data state:
 {data}
-analysis report:
-{previous_report}
 SUCCEEDED TOOLS:
 {success_tools}
 FAILED TOOLS:
@@ -108,7 +106,6 @@ class Prompts:
     def visualizer_prompt_formater(self, state: State, msg: str) -> str:
         return msg.format(
             data=state["df_info"],
-            previous_report=state["previous_report"],
             success_tools=state["success_tools"],
             failed_tools=state["failed_tools"]
         )

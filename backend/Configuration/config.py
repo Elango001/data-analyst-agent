@@ -6,7 +6,7 @@ from backend.agents.agent_utils import ChatGemini
 import numpy as np
 import pandas as pd
 from backend.tools.tool_main import AllTools
-from backend.db.log import DeletedDataHandler, PostgresLogger, DeletedDataCSV
+from backend.db.log import DeletedDataHandler, VersionHandler
 from typing import Optional, List, Any, Dict
 import os
 
@@ -140,15 +140,17 @@ class ToolConfig:
         return self.cleaner_tools
     
     def set_analyser_tools(self, tools: List[Any]) -> None:
-        self.analyser_tools = AllTools().add_tools(tools)
+        self.analyser_tools = AllTools()
+        self.analyser_tools.add_tools(tools)
 
     def get_analyser_tools(self) -> Optional[List[Any]]:
         return self.analyser_tools
     
-    def set_visualizer_tools(self,tools:List[Any])->None:
-        self.visualizer_tools=AllTools().add_tools(tools)
+    def set_visualizer_tools(self, tools: List[Any]) -> None:
+        self.visualizer_tools = AllTools()
+        self.visualizer_tools.add_tools(tools)
 
-    def get_visualizer_tools(self)->Optional[List[Any]]:
+    def get_visualizer_tools(self) -> Optional[List[Any]]:
         return self.visualizer_tools
     
 class DataConfig:
@@ -189,16 +191,23 @@ class DataConfig:
 
 class DBConfig:
     deleted_data_handler: Optional[DeletedDataHandler] = None
+    version_handler: Optional[VersionHandler] = None
+    
     def __init__(self) -> None:
         self.deleted_data_handler = None
+        self.version_handler = None
     
     def set_db_config(self, host: str = "localhost", database: str = "preprocessing_logs",
                       user: str = "postgres", password: str = "postgres", port: int = 5432,
-                      csv_path: str = "deleted_data.csv") -> None:
+                      csv_path: str = "deleted_data.csv", version_dir: str = "data_versions") -> None:
         self.deleted_data_handler = DeletedDataHandler(host, database, user, password, port, csv_path)
+        self.version_handler = VersionHandler(host, database, user, password, port, version_dir)
     
     def get_deleted_data_handler(self) -> Optional[DeletedDataHandler]:
         return self.deleted_data_handler
+    
+    def get_version_handler(self) -> Optional[VersionHandler]:
+        return self.version_handler
 
 class Config:
     cleaner_config: Cleaner_config = Cleaner_config()

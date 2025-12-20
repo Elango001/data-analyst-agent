@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const API_BASE = "";
+const API_BASE = "http://localhost:8000";
 
 const DeletedDataPage = () => {
   const [logs, setLogs] = useState([]);

@@ -19,7 +19,7 @@ class CleanerAgent:
             state["tool_call"] = tool_args
         else:
             state["tool_call"] = None
-            state["cur_agent"] = "analyser"
+            # state["cur_agent"] = "analyser"
         state["cleaner"]["count"] = state["cleaner"].get("count", 0) + 1
         state["cleaner"]["cleaner_response"].append(reason)
         return state

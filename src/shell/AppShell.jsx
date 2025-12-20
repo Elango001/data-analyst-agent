@@ -4,6 +4,7 @@ import HomePage from "../pages/HomePage";
 import LlmPage from "../pages/LlmPage";
 import NotebookPage from "../pages/NotebookPage";
 import LogsPage from "../pages/LogsPage";
+import VisualizationsPage from "../pages/VisualizationsPage";
 
 const AppShell = () => {
   return (
@@ -20,6 +21,9 @@ const AppShell = () => {
           <NavLink to="/notebook" className="top-nav-item">
             Notebook
           </NavLink>
+          <NavLink to="/visualizations" className="top-nav-item">
+            Visualizations
+          </NavLink>
           <NavLink to="/logs" className="top-nav-item">
             Logs & Rollback
           </NavLink>
@@ -30,6 +34,7 @@ const AppShell = () => {
           <Route path="/" element={<HomePage />} />
           <Route path="/llm" element={<LlmPage />} />
           <Route path="/notebook" element={<NotebookPage />} />
+          <Route path="/visualizations" element={<VisualizationsPage />} />
           <Route path="/logs" element={<LogsPage />} />
         </Routes>
       </main>
