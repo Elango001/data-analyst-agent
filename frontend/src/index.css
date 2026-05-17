@@ -1,0 +1,95 @@
+@import url("https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap");
+
+:root {
+  --bg: #f4fbf6;
+  --bg-highlight: #ffffff;
+  --panel: #ffffff;
+  --panel-muted: #eef6f0;
+  --border: #d9eadf;
+  --text: #1f2a24;
+  --text-strong: #14211b;
+  --text-muted: #5b6d62;
+  --accent: #2fd072;
+  --accent-soft: #9af0b1;
+  --accent-dim: rgba(47, 208, 114, 0.16);
+  --shadow: 0 20px 45px rgba(24, 48, 32, 0.12);
+
+  font-family: "Work Sans", "Segoe UI", sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0f0d;
+    --bg-highlight: #0f1412;
+    --panel: #111916;
+    --panel-muted: #0f1714;
+    --border: #1e2d26;
+    --text: #d6e7db;
+    --text-strong: #f2fff6;
+    --text-muted: #92a89c;
+    --accent: #5ef29a;
+    --accent-soft: #2aa35e;
+    --accent-dim: rgba(94, 242, 154, 0.12);
+    --shadow: 0 25px 55px rgba(0, 0, 0, 0.4);
+  }
+}
+
+[data-theme="light"] {
+  --bg: #f4fbf6;
+  --bg-highlight: #ffffff;
+  --panel: #ffffff;
+  --panel-muted: #eef6f0;
+  --border: #d9eadf;
+  --text: #1f2a24;
+  --text-strong: #14211b;
+  --text-muted: #5b6d62;
+  --accent: #2fd072;
+  --accent-soft: #9af0b1;
+  --accent-dim: rgba(47, 208, 114, 0.16);
+  --shadow: 0 20px 45px rgba(24, 48, 32, 0.12);
+}
+
+[data-theme="dark"] {
+  --bg: #0b0f0d;
+  --bg-highlight: #0f1412;
+  --panel: #111916;
+  --panel-muted: #0f1714;
+  --border: #1e2d26;
+  --text: #d6e7db;
+  --text-strong: #f2fff6;
+  --text-muted: #92a89c;
+  --accent: #5ef29a;
+  --accent-soft: #2aa35e;
+  --accent-dim: rgba(94, 242, 154, 0.12);
+  --shadow: 0 25px 55px rgba(0, 0, 0, 0.4);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.form-label {
+  color: var(--text-strong);
+  font-weight: 600;
+}
+
+.form-control,
+.form-select {
+  background: var(--panel);
+  color: var(--text-strong);
+  border: 1px solid var(--border);
+}
+
+.form-control::placeholder {
+  color: var(--text-muted);
+}
+
+* {
+  box-sizing: border-box;
+}

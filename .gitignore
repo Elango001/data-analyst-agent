@@ -3,3 +3,4 @@ __pycache__/
 node_modules/
 main.py
 data-analyst-agent-using-gemini.ipynb
+/backend/.venv
